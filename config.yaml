@@ -1,0 +1,49 @@
+﻿logfile_directory: '/home/blake/repo_backups/backup.log'
+
+gitlab:
+  enable: True
+  api_url: 'https://gitlab.com/api/v4'
+  auth_token: ''
+  # If you want to use multiple group_ids use the seperated by commas '1234, 12345'
+  group_ids: ''
+  
+  backups:
+    # If no repo_path is specified for the backups it will create a backup directory in the scripts working directory
+    repo_path: '/home/user/repo_backups'
+    # If you don't want to store the cloned repos and delete them after backup change this remove_directory to True
+    remove_directory: False
+    # If don't want to generate all repos as a zip change 'generate_zip_export' to False
+    generate_zip_export: True
+    zip_export_path: '/home/user/repo_backups/gitlab_zips'
+    # Set this to the number of zip files you wish to store
+    # If the amount of zips go past this number then the zips get deleted oldest to newest (based on date appended in the zip file name)
+    # If you don't want a limit on zip storage days leave this blank or set as 0
+    zip_storage: 30
+  
+github:
+  # Backup a github organizations repositories
+  enable: True
+  api_url: 'https://api.github.com'
+  auth_token: ''
+  # Username will be the backup for your personal user account, and organization will be your org backup name
+  user_name: ''
+  org_name: ''
+
+  backups:
+    # If no repo_path is specified for the backups it will create a backup directory in the scripts working directory
+    repo_path: '/home/user/repo_backups'
+    # If you don't want to store the cloned repos and delete them after backup change this remove_directory to True
+    remove_directory: False
+    # If don't want to generate all repos as a zip change 'generate_zip_export' to False
+    generate_zip_export: True
+    zip_export_path: '/home/user/repo_backups/github_zips'
+    # Set this to the number of zip files you wish to store
+    # If the amount of zips go past this number then the zips get deleted oldest to newest (based on date appended in the zip file name)
+    # If you don't want a limit on zip storage days leave this blank or set as 0
+    zip_storage: 30
+
+gitlab_export:
+  # Expects a tarfile containing 1 or more gitlab export within it, useful when extracting multiple gitlab repositories from multiple gitlab exports
+  enable: False
+  export_directory: '/home/user/gitlab_export_backups'
+  export_tarfile_path: '/home/user/tar_backup.tgz'
