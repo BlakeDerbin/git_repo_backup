@@ -26,6 +26,7 @@ github:
   api_url: 'https://api.github.com'
   auth_token: ''
   # Username will be the backup for your personal user account, and organization will be your org backup name
+  # You can use add multiple usernames and organizations to backup in the format of 'username1, username2'
   user_name: ''
   org_name: ''
 

@@ -37,8 +37,8 @@ if __name__ == '__main__':
     github_enable_backup = (github['enable'], False)[github['enable'] is None]
     github_api_url = github['api_url']
     github_auth_token = github['auth_token']
-    github_org_name = github['org_name']
-    github_user_name = github['user_name']
+    github_org_names = github['org_name'].split(',')
+    github_user_names = github['user_name'].split(',')
 
     github_remove_repo_dir = github['backups']['remove_directory']
     github_backup_path = github['backups']['repo_path']
@@ -134,22 +134,21 @@ if __name__ == '__main__':
         logging.info(f"Gitlab group project export from tarfile: {gitlab_export_tar} SUCCESSFUL\n")
         print(f"Gitlab group project export from tarfile: {gitlab_export_tar} SUCCESSFUL\n")
 
-    if github_enable_backup:
-        github_backup = github_s.GithubBackup(github_auth_token, github_api_url, github_org_name, github_user_name)
-        github_org_repos, github_user_repos = github_backup.fetch_github_repos()
+    if github_org_names != '' and github_enable_backup:
+        for n in github_org_names:
+            org_name = n.replace(" ", "")
+            github_backup = github_s.GithubBackup(github_auth_token, github_api_url, org_name, True)
+            github_org_repos = github_backup.fetch_github_repos()
 
-        github_org_backup = f'github_{github_org_name.lower()}_backups'
-        github_user_backup = f'github_{github_user_name.lower()}_backups'
-
-        if github_org_name != '':
-            full_org_backup_path = f'{github_backup_path}/{github_org_backup}'
+            github_backup_dir = f'github_{org_name.lower()}_backups'
+            full_org_backup_path = f'{github_backup_path}/{github_backup_dir}'
             create_directory(full_org_backup_path)
-            github_backup.backup_github_repos(full_org_backup_path, github_org_repos, github_org_name)
+            github_backup.backup_github_repos(full_org_backup_path, github_org_repos, org_name)
 
             if github_generate_zip:
                 create_directory(github_zip_path)
                 github_org_zip = zip_repos.ZipRepositories(
-                    f'github_{github_org_name.lower()}',
+                    f'github_{org_name.lower()}',
                     github_zip_path,
                     github_zip_storage_count,
                     full_org_backup_path,
@@ -160,18 +159,24 @@ if __name__ == '__main__':
             if github_remove_repo_dir:
                 remove_directory(full_org_backup_path)
 
-            logging.info(f"Github backups for: {github_org_name} SUCCESSFUL\n")
-            print(f"Github backups for: {github_org_name} SUCCESSFUL\n")
+            logging.info(f"Github backups for: {org_name} SUCCESSFUL\n")
+            print(f"Github backups for: {org_name} SUCCESSFUL\n")
 
-        if github_user_name != '':
-            full_user_backup_path = f'{github_backup_path}/{github_user_backup}'
+    if github_user_names != '' and github_enable_backup:
+        for n in github_user_names:
+            user_name = n.replace(" ", "")
+            github_backup = github_s.GithubBackup(github_auth_token, github_api_url, user_name, False)
+            github_user_repos = github_backup.fetch_github_repos()
+
+            github_backup_dir = f'github_{user_name.lower()}_backups'
+            full_user_backup_path = f'{github_backup_path}/{github_backup_dir}'
             create_directory(full_user_backup_path)
-            github_backup.backup_github_repos(full_user_backup_path, github_user_repos, github_user_name)
+            github_backup.backup_github_repos(full_user_backup_path, github_user_repos, user_name)
 
             if github_generate_zip:
                 create_directory(github_zip_path)
                 github_user_zip = zip_repos.ZipRepositories(
-                    f'github_{github_user_name.lower()}',
+                    f'github_{user_name.lower()}',
                     github_zip_path,
                     github_zip_storage_count,
                     full_user_backup_path,
@@ -182,5 +187,5 @@ if __name__ == '__main__':
             if github_remove_repo_dir:
                 remove_directory(full_user_backup_path)
 
-            logging.info(f"Github backups for: {github_user_name} SUCCESSFUL\n")
-            print(f"Github backups for: {github_user_name} SUCCESSFUL\n")
+            logging.info(f"Github backups for: {user_name} SUCCESSFUL\n")
+            print(f"Github backups for: {user_name} SUCCESSFUL\n")
