@@ -15,7 +15,7 @@ class GithubBackup:
         self.is_org = is_org
         self.clone_base_url = f'https://oauth2:{self.auth_token}@github.com/'
         self.api_org_url = f'{self.api_url}/orgs/{self.github_name}/repos'
-        self.api_user_url = f'{self.api_url}/users/{self.github_name}/repos'
+        self.api_user_url = f'{self.api_url}/search/repositories?q=user:{self.github_name}'
 
     def fetch_github_repos(self):
         try:
@@ -23,17 +23,24 @@ class GithubBackup:
 
             if self.is_org:
                 request = requests.get(self.api_org_url, headers={'Authorization': f'token {self.auth_token}'})
+                data = json.loads(request.text)
+
+                for i in range(len(data)):
+                    for k in data[i]:
+                        if k == 'clone_url':
+                            github_repos[0].append(data[i][k])
+                        if k == 'name':
+                            github_repos[1].append(data[i][k])
             else:
                 request = requests.get(self.api_user_url, headers={'Authorization': f'token {self.auth_token}'})
+                data = json.loads(request.text)
 
-            data = json.loads(request.text)
-
-            for i in range(len(data)):
-                for k in data[i]:
-                    if k == 'clone_url':
-                        github_repos[0].append(data[i][k])
-                    if k == 'name':
-                        github_repos[1].append(data[i][k])
+                for i in range(len(data['items'])):
+                    for k in data['items'][i]:
+                        if k == 'clone_url':
+                            github_repos[0].append(data['items'][i][k])
+                        if k == 'name':
+                            github_repos[1].append(data['items'][i][k])
 
             return github_repos
         except OSError as e:

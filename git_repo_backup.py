@@ -17,11 +17,11 @@ if __name__ == '__main__':
     log_file_path = (config['logfile_directory'], f'{Path.cwd}/gitlab_backup.log')[config['logfile_directory'] is None]
 
     # gitlab clone group projects config variables
-    gitlab_enable_backup = (['enable'], False)[gitlab['enable'] is None ]
+    gitlab_enable_backup = (gitlab['enable'], False)[gitlab['enable'] is None]
     gitlab_token = gitlab['auth_token']
-    gitlab_group_ids = gitlab['group_ids'].split(',')
+    gitlab_group_ids = (gitlab['group_ids'], None)[gitlab['group_ids'] == '' or gitlab['group_ids'] is None]
     gitlab_api_url = gitlab['api_url']
-   
+
     gitlab_remove_repo_dir = gitlab['backups']['remove_directory']
     gitlab_backup_path = gitlab['backups']['repo_path']
     gitlab_zip_path = (gitlab['backups']['zip_export_path'], Path.cwd())[gitlab['backups']['zip_export_path'] is None]
@@ -37,8 +37,8 @@ if __name__ == '__main__':
     github_enable_backup = (github['enable'], False)[github['enable'] is None]
     github_api_url = github['api_url']
     github_auth_token = github['auth_token']
-    github_org_names = github['org_name'].split(',')
-    github_user_names = github['user_name'].split(',')
+    github_org_names = (github['org_name'], None)[github['org_name'] == '' or github['org_name'] is None]
+    github_user_names = (github['user_name'], None)[github['user_name'] == '' or github['user_name'] is None]
 
     github_remove_repo_dir = github['backups']['remove_directory']
     github_backup_path = github['backups']['repo_path']
@@ -59,6 +59,17 @@ if __name__ == '__main__':
     except OSError as e:
         print(f"Error: {e}")
         sys.exit(1)
+
+    # Checks if config values are present for gitlab and github
+    if gitlab_enable_backup and gitlab_group_ids is None:
+        logging.error(f"Gitlab backups enabled with no group_ids, exiting...")
+        print(f"Gitlab backups enabled with no group_ids, exiting...")
+        if github_enable_backup and github_user_names is None and github_org_names is None:
+            logging.error("Github backups are enabled with no org_name or user_name provided, exiting...")
+            print("Github backups are enabled with no org_name or user_name provided, exiting...")
+            sys.exit(1)
+        else:
+            sys.exit(1)
 
     def create_directory(dir_in):
         # Creates directory
@@ -93,9 +104,9 @@ if __name__ == '__main__':
         else:
             raise
 
-
     # Handles gitlab backups from group_id
-    if gitlab_enable_backup:
+    if gitlab_enable_backup and gitlab_group_ids is not None:
+        gitlab_group_ids = gitlab_group_ids.split(',')
         for group in gitlab_group_ids:
             gitlab_backup = gitlab_s.GitlabBackup(gitlab_token, group.strip(), gitlab_api_url)
             group_projects, group_name = gitlab_backup.fetch_group_projects()
@@ -134,7 +145,8 @@ if __name__ == '__main__':
         logging.info(f"Gitlab group project export from tarfile: {gitlab_export_tar} SUCCESSFUL\n")
         print(f"Gitlab group project export from tarfile: {gitlab_export_tar} SUCCESSFUL\n")
 
-    if github_org_names != '' and github_enable_backup:
+    if github_org_names is not None and github_enable_backup:
+        github_org_names = github_org_names.split(",")
         for n in github_org_names:
             org_name = n.replace(" ", "")
             github_backup = github_s.GithubBackup(github_auth_token, github_api_url, org_name, True)
@@ -162,7 +174,8 @@ if __name__ == '__main__':
             logging.info(f"Github backups for: {org_name} SUCCESSFUL\n")
             print(f"Github backups for: {org_name} SUCCESSFUL\n")
 
-    if github_user_names != '' and github_enable_backup:
+    if github_user_names is not None and github_enable_backup:
+        github_user_names = github_user_names.split(",")
         for n in github_user_names:
             user_name = n.replace(" ", "")
             github_backup = github_s.GithubBackup(github_auth_token, github_api_url, user_name, False)
